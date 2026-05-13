@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>M&E Dashboard — แผนยุทธศาสตร์สุขภาวะ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0f1117;
+  --surface:   #181c26;
+  --surface2:  #1e2333;
+  --border:    #2a3047;
+  --border2:   #3a4460;
+  --text:      #e8ecf4;
+  --muted:     #7a8aaa;
+  --accent:    #4f8ef7;
+  --accent2:   #38d9a9;
+  --warn:      #f5a623;
+  --danger:    #e05454;
+  --green:     #3dba6e;
+  --green-bg:  #0f2a1a;
+  --amber-bg:  #2a1f08;
+  --red-bg:    #2a0f0f;
+  --radius:    8px;
+  --radius-lg: 14px;
+  --mono:      'IBM Plex Mono', monospace;
+  --sans:      'IBM Plex Sans Thai', sans-serif;
+  --shadow:    0 4px 24px rgba(0,0,0,.45);
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent2); box-shadow: 0 0 10px var(--accent2); animation: pulse 2.4s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.topbar-title { font-size: 15px; font-weight: 600; letter-spacing: .01em; }
+.topbar-sub { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+/* ── SYNC BAR ── */
+.sync-banner {
+  background: linear-gradient(90deg, #0d1e3a 0%, #0a2a1e 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 9px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.sync-banner .sheet-url {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent2);
+  word-break: break-all;
+  flex: 1;
+  min-width: 200px;
+}
+.sync-status { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+.sync-dot.syncing { background: var(--warn); box-shadow: 0 0 6px var(--warn); animation: pulse .8s ease infinite; }
+.sync-dot.error { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: none; }
+
+/* ── MAIN LAYOUT ── */
+.main { max-width: 1440px; margin: 0 auto; padding: 24px 28px; }
+
+/* ── CONFIG PANEL ── */
+.config-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.config-card h2 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+.config-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.config-field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 260px; }
+.config-field label { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.config-field input {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color .2s;
+}
+.config-field input:focus { border-color: var(--accent); }
+.config-field input::placeholder { color: var(--muted); }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all .18s;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #6ba3ff; }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+.btn-ghost:hover { background: var(--border); }
+.btn-green { background: var(--green); color: #fff; }
+.btn-green:hover { filter: brightness(1.1); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* ── KPI STRIP ── */
+.kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi.total::before { background: var(--accent); }
+.kpi.complete::before { background: var(--green); }
+.kpi.partial::before { background: var(--warn); }
+.kpi.missing::before { background: var(--danger); }
+.kpi-label { font-size: 11px; color: var(--muted); font-family: var(--mono); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.kpi-value { font-size: 36px; font-weight: 600; line-height: 1; }
+.kpi.total .kpi-value { color: var(--accent); }
+.kpi.complete .kpi-value { color: var(--green); }
+.kpi.partial .kpi-value { color: var(--warn); }
+.kpi.missing .kpi-value { color: var(--danger); }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.toolbar-search {
+  flex: 1; min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  outline: none;
+}
+.toolbar-search:focus { border-color: var(--accent); }
+.filter-select {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+  font-family: var(--mono);
+  cursor: pointer;
+}
+
+/* ── TABLE ── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; min-width: 900px; }
+thead th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+thead th:hover { color: var(--text); }
+thead th .sort-icon { margin-left: 4px; opacity: .4; }
+thead th.active .sort-icon { opacity: 1; color: var(--accent); }
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .12s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+tbody td { padding: 11px 14px; font-size: 13px; vertical-align: middle; }
+.td-code { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 500; white-space: nowrap; }
+.td-name { max-width: 280px; }
+.td-node { font-family: var(--mono); font-size: 11px; }
+.td-mentor { color: var(--muted); font-size: 12px; }
+
+/* completeness bars */
+.score-bars { display: flex; gap: 4px; align-items: center; }
+.score-seg { height: 6px; flex: 1; border-radius: 3px; background: var(--border); }
+.score-seg.filled-t { background: var(--accent2); }
+.score-seg.filled-q { background: var(--accent); }
+.score-seg.filled-ql { background: #b87fff; }
+.score-seg.half { opacity: .45; }
+.score-pct { font-family: var(--mono); font-size: 12px; color: var(--muted); min-width: 34px; text-align: right; }
+
+/* status pill */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+.pill-complete { background: var(--green-bg); color: var(--green); border: 1px solid #1a4d2e; }
+.pill-partial  { background: var(--amber-bg); color: var(--warn);  border: 1px solid #4d3209; }
+.pill-missing  { background: var(--red-bg);   color: var(--danger);border: 1px solid #4d1515; }
+.pill-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* ── MODAL ── */
+.modal-bg {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow), 0 0 60px rgba(79,142,247,.08);
+  animation: modal-in .22s ease;
+}
+@keyframes modal-in { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 26px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.modal-code { font-family: var(--mono); font-size: 13px; color: var(--accent); font-weight: 500; }
+.modal-name { font-size: 17px; font-weight: 600; margin-top: 2px; line-height: 1.3; }
+.modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 22px; line-height: 1; flex-shrink: 0; padding: 2px 6px; border-radius: 6px; }
+.modal-close:hover { background: var(--border); color: var(--text); }
+.modal-body { padding: 22px 26px; }
+
+/* modal tabs */
+.modal-tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--bg); border-radius: var(--radius); padding: 4px; }
+.modal-tab {
+  flex: 1;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--mono);
+}
+.modal-tab.active { background: var(--surface2); color: var(--text); }
+.modal-tab:hover:not(.active) { color: var(--text); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* detail grid */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.detail-item { background: var(--bg); border-radius: var(--radius); padding: 12px 14px; }
+.detail-label { font-size: 10px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.detail-value { font-size: 13px; line-height: 1.4; }
+.detail-item.wide { grid-column: 1/-1; }
+
+/* completeness in modal */
+.modal-completeness { background: var(--bg); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+.modal-comp-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.modal-comp-row:last-child { margin-bottom: 0; }
+.comp-label { font-size: 11px; font-family: var(--mono); color: var(--muted); width: 70px; flex-shrink: 0; }
+.comp-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; }
+.comp-bar-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+.comp-bar-fill.tracker { background: var(--accent2); }
+.comp-bar-fill.quant   { background: var(--accent); }
+.comp-bar-fill.qual    { background: #b87fff; }
+.comp-pct { font-family: var(--mono); font-size: 12px; width: 38px; text-align: right; flex-shrink: 0; }
+
+/* quant & qual tables inside modal */
+.sub-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.sub-table th { background: var(--bg); padding: 7px 10px; text-align: left; font-size: 10px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
+.sub-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); line-height: 1.4; }
+.sub-table tr:last-child td { border-bottom: none; }
+.sub-table tr:hover td { background: var(--surface2); }
+.qa-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  background: var(--red-bg);
+  color: var(--danger);
+}
+.ev-high   { color: var(--green); }
+.ev-medium { color: var(--warn); }
+.ev-low    { color: var(--muted); }
+
+/* sheet link */
+.sheet-link-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0a2040;
+  border: 1px solid #1a3a70;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-top: 16px;
+}
+.sheet-link-bar svg { flex-shrink: 0; }
+.sheet-link-text { font-size: 12px; flex: 1; }
+.sheet-link-text a { color: var(--accent2); text-decoration: underline; }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+}
+
+/* ── LOADING / EMPTY ── */
+.loading-row td { text-align: center; padding: 40px; color: var(--muted); font-family: var(--mono); font-size: 13px; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 8px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px) {
+  .main { padding: 16px; }
+  .kpi-strip { grid-template-columns: 1fr 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-dot"></div>
+    <div>
+      <div class="topbar-title">M&amp;E Dashboard</div>
+      <div class="topbar-sub">แผนยุทธศาสตร์สุขภาวะ 2568</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span id="lastUpdated" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+    <button class="btn btn-ghost btn-sm" onclick="fetchData()">
+      <span id="refreshIcon">↻</span> Refresh
+    </button>
+    <button class="btn btn-green btn-sm" id="openSheetBtn" onclick="openGoogleSheet()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.4-1.4L12 14.2l7.6-7.6L21 8l-9 9z"/></svg>
+      Edit in Google Sheets
+    </button>
+  </div>
+</div>
+
+<!-- SYNC BANNER -->
+<div class="sync-banner">
+  <div class="sync-status">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncLabel">Not connected</span>
+  </div>
+  <span style="color:var(--border2)">|</span>
+  <span style="color:var(--muted);font-size:11px">Sheet ID:</span>
+  <span class="sheet-url" id="sheetUrlDisplay">— configure below —</span>
+  <span style="color:var(--border2)">|</span>
+  <span style="font-size:11px;color:var(--muted)">Auto-refresh every <span style="color:var(--accent2)">60s</span></span>
+</div>
+
+<div class="main">
+
+  <!-- CONFIG PANEL -->
+  <div class="config-card" id="configCard">
+    <h2>⚙️ Google Sheets Connection</h2>
+    <div class="config-row">
+      <div class="config-field" style="flex:2">
+        <label>GOOGLE SHEET ID</label>
+        <input type="text" id="sheetId" placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" />
+      </div>
+      <div class="config-field">
+        <label>SHEET TAB NAME</label>
+        <input type="text" id="sheetTab" placeholder="Dashboard" value="Dashboard" />
+      </div>
+      <div style="display:flex;gap:8px;padding-bottom:1px">
+        <button class="btn btn-primary" onclick="connectSheet()">Connect Sheet</button>
+        <button class="btn btn-ghost" onclick="loadSampleData()">Load Sample Data</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;background:var(--bg);border-radius:var(--radius);font-size:11px;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--text)">Setup instructions:</strong><br/>
+      1. Open your Google Sheet → <strong style="color:var(--accent2)">File → Share → Publish to web</strong> → select sheet tab → Publish<br/>
+      2. Copy the <strong style="color:var(--accent2)">Sheet ID</strong> from the URL: docs.google.com/spreadsheets/d/<strong style="color:var(--warn)">SHEET_ID_HERE</strong>/edit<br/>
+      3. Paste it above and click <strong style="color:var(--accent)">Connect Sheet</strong><br/>
+      4. Your Google Sheet must have these columns (row 1): <code style="color:var(--accent2)">project_code | ชื่อโครงการย่อย | node_type | จังหวัด | พี่เลี้ยง | tracker_score | quant_score | qual_score | สถานะโครงการ | หมายเหตุ | action_needed</code>
+    </div>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi total">
+      <div class="kpi-label">Total Projects</div>
+      <div class="kpi-value" id="kpi-total">—</div>
+      <div class="kpi-sub">โครงการย่อยทั้งหมด</div>
+    </div>
+    <div class="kpi complete">
+      <div class="kpi-label">Complete ≥ 90%</div>
+      <div class="kpi-value" id="kpi-complete">—</div>
+      <div class="kpi-sub">ข้อมูลครบถ้วน</div>
+    </div>
+    <div class="kpi partial">
+      <div class="kpi-label">Partial 50–89%</div>
+      <div class="kpi-value" id="kpi-partial">—</div>
+      <div class="kpi-sub">ข้อมูลบางส่วน</div>
+    </div>
+    <div class="kpi missing">
+      <div class="kpi-label">Missing &lt; 50%</div>
+      <div class="kpi-value" id="kpi-missing">—</div>
+      <div class="kpi-sub">ต้องติดตามด่วน</div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <input class="toolbar-search" id="searchBox" placeholder="🔍  ค้นหา project code, ชื่อโครงการ, จังหวัด, พี่เลี้ยง..." oninput="renderTable()"/>
+    <select class="filter-select" id="filterNode" onchange="renderTable()">
+      <option value="">All Node Types</option>
+      <option>NT1-AREA</option>
+      <option>NT2-ISSUE</option>
+      <option>NT3-POP</option>
+      <option>WP01-GRANT</option>
+      <option>WP02-PARTNERSHIP</option>
+    </select>
+    <select class="filter-select" id="filterStatus" onchange="renderTable()">
+      <option value="">All Statuses</option>
+      <option value="Complete">Complete</option>
+      <option value="Partial">Partial</option>
+      <option value="Missing">Missing</option>
+    </select>
+    <select class="filter-select" id="sortBy" onchange="renderTable()">
+      <option value="completeness_asc">Sort: Completeness ↑</option>
+      <option value="completeness_desc">Sort: Completeness ↓</option>
+      <option value="code">Sort: Code</option>
+      <option value="budget_desc">Sort: Budget ↓</option>
+    </select>
+    <span style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-left:4px" id="rowCount"></span>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>ชื่อโครงการย่อย</th>
+          <th>Node Type</th>
+          <th>จังหวัด</th>
+          <th>พี่เลี้ยง</th>
+          <th>Completeness</th>
+          <th>Status</th>
+          <th>Issue / Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr class="loading-row"><td colspan="8"><span class="spinner"></span> Load sample data or connect a Google Sheet to begin</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /main -->
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <div>
+        <div class="modal-code" id="m-code"></div>
+        <div class="modal-name" id="m-name"></div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="pill" id="m-status-pill"></span>
+          <span style="font-size:12px;color:var(--muted);font-family:var(--mono)" id="m-node"></span>
+          <span style="font-size:12px;color:var(--muted)" id="m-province"></span>
+        </div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Tabs -->
+      <div class="modal-tabs">
+        <div class="modal-tab active" onclick="switchTab(this,'tab-overview')">Overview</div>
+        <div class="modal-tab" onclick="switchTab(this,'tab-quant')">📈 Quantitative</div>
+        <div class="modal-tab" onclick="switchTab(this,'tab-qual')">🗒️ Qualitative</div>
+        <div class="modal-tab" onclick="switchTab(this,'tab-tracker')">📁 Tracker</div>
+      </div>
+
+      <!-- Tab: Overview -->
+      <div class="tab-pane active" id="tab-overview">
+        <div class="modal-completeness">
+          <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:12px">COMPLETENESS BREAKDOWN</div>
+          <div class="modal-comp-row">
+            <div class="comp-label">Tracker</div>
+            <div class="comp-bar-wrap"><div class="comp-bar-fill tracker" id="m-bar-t" style="width:0%"></div></div>
+            <div class="comp-pct" id="m-pct-t">—</div>
+          </div>
+          <div class="modal-comp-row">
+            <div class="comp-label">Quant</div>
+            <div class="comp-bar-wrap"><div class="comp-bar-fill quant" id="m-bar-q" style="width:0%"></div></div>
+            <div class="comp-pct" id="m-pct-q">—</div>
+          </div>
+          <div class="modal-comp-row">
+            <div class="comp-label">Qual</div>
+            <div class="comp-bar-wrap"><div class="comp-bar-fill qual" id="m-bar-ql" style="width:0%"></div></div>
+            <div class="comp-pct" id="m-pct-ql">—</div>
+          </div>
+        </div>
+        <div class="detail-grid" id="m-detail-grid"></div>
+        <div class="sheet-link-bar" id="m-sheet-link" style="display:none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#34a853"><path d="M19 3H5c-1.1 0-2 .9-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.4-1.4L12 14.2l7.6-7.6L21 8l-9 9z"/></svg>
+          <span class="sheet-link-text">Edit this project's data directly in Google Sheets: <a id="m-sheet-href" href="#" target="_blank">Open row in Google Sheets →</a></span>
+        </div>
+      </div>
+
+      <!-- Tab: Quant -->
+      <div class="tab-pane" id="tab-quant">
+        <div id="m-quant-content"></div>
+      </div>
+
+      <!-- Tab: Qual -->
+      <div class="tab-pane" id="tab-qual">
+        <div id="m-qual-content"></div>
+      </div>
+
+      <!-- Tab: Tracker -->
+      <div class="tab-pane" id="tab-tracker">
+        <div id="m-tracker-content"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  M&amp;E Dashboard · TH6 Strategic Plan 2568 · Data source: Google Sheets (live) &nbsp;|&nbsp; 
+  Built for <code>GitHub Pages</code> — no server required · 
+  <a href="https://github.com" target="_blank" style="color:var(--accent)">View on GitHub</a>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   CONFIG & STATE
+═══════════════════════════════════════════════════════════════════ */
+let CONFIG = {
+  sheetId: localStorage.getItem('me_sheetId') || '',
+  sheetTab: localStorage.getItem('me_sheetTab') || 'Dashboard',
+  sheetUrl: ''
+};
+
+let ALL_PROJECTS = [];    // master list from Google Sheets OR sample
+let ALL_QUANT    = [];
+let ALL_QUAL     = [];
+let CURRENT_PROJECT = null;
+let refreshTimer = null;
+
+/* Restore saved config */
+if (CONFIG.sheetId) {
+  document.getElementById('sheetId').value = CONFIG.sheetId;
+  document.getElementById('sheetTab').value = CONFIG.sheetTab;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GOOGLE SHEETS FETCH
+   Uses the public CSV export endpoint — no API key needed.
+   Sheet must be published via File → Share → Publish to web.
+═══════════════════════════════════════════════════════════════════ */
+function buildCsvUrl(sheetId, tabName) {
+  // gid lookup not needed — use tab name via gviz
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+}
+
+async function fetchGoogleSheet(sheetId, tabName) {
+  const url = buildCsvUrl(sheetId, tabName);
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const text = await resp.text();
+  return parseCSV(text);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = parseCSVRow(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = parseCSVRow(line);
+    const obj = {};
+    headers.forEach((h, i) => { obj[h.trim()] = (vals[i] || '').trim(); });
+    return obj;
+  });
+}
+
+function parseCSVRow(line) {
+  const result = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += ch; }
+  }
+  result.push(cur);
+  return result;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CONNECT SHEET
+═══════════════════════════════════════════════════════════════════ */
+async function connectSheet() {
+  const sid = document.getElementById('sheetId').value.trim();
+  const tab = document.getElementById('sheetTab').value.trim() || 'Dashboard';
+  if (!sid) { alert('Please enter a Sheet ID.'); return; }
+
+  setSyncStatus('syncing', 'Connecting…');
+  CONFIG.sheetId = sid;
+  CONFIG.sheetTab = tab;
+  localStorage.setItem('me_sheetId', sid);
+  localStorage.setItem('me_sheetTab', tab);
+  CONFIG.sheetUrl = `https://docs.google.com/spreadsheets/d/${sid}/edit`;
+  document.getElementById('sheetUrlDisplay').textContent = sid;
+
+  await fetchData();
+  startAutoRefresh();
+}
+
+async function fetchData() {
+  if (!CONFIG.sheetId) return;
+  setSyncStatus('syncing', 'Fetching…');
+  document.getElementById('refreshIcon').style.animation = 'spin .6s linear infinite';
+  try {
+    // Fetch the main Dashboard tab
+    const rows = await fetchGoogleSheet(CONFIG.sheetId, CONFIG.sheetTab);
+    // Also try to fetch Quant and Qual tabs (graceful fail)
+    let quantRows = [], qualRows = [];
+    try { quantRows = await fetchGoogleSheet(CONFIG.sheetId, 'Quant'); } catch(e) {}
+    try { qualRows  = await fetchGoogleSheet(CONFIG.sheetId, 'Qual'); }  catch(e) {}
+
+    ALL_PROJECTS = rows.map(normaliseRow);
+    ALL_QUANT    = quantRows;
+    ALL_QUAL     = qualRows;
+
+    updateKPIs();
+    renderTable();
+    setSyncStatus('ok', `Synced ${new Date().toLocaleTimeString('th-TH')}`);
+    document.getElementById('lastUpdated').textContent = `Last sync: ${new Date().toLocaleTimeString('th-TH')}`;
+  } catch(e) {
+    setSyncStatus('error', `Error: ${e.message}`);
+    console.error(e);
+  }
+  document.getElementById('refreshIcon').style.animation = '';
+}
+
+/* Map incoming sheet columns to internal schema */
+function normaliseRow(r) {
+  const ts  = parseFloat(r['tracker_score'] || r['Tracker'] || '0') || 0;
+  const qs  = parseFloat(r['quant_score']   || r['Quant']   || '0') || 0;
+  const qls = parseFloat(r['qual_score']    || r['Qual']    || '0') || 0;
+  const pct = Math.round((ts + qs + qls) / 3 * 100);
+  return {
+    code:      r['project_code'] || r['Code'] || '',
+    name:      r['ชื่อโครงการย่อย'] || r['name'] || '',
+    node:      r['node_type'] || r['Node'] || '',
+    province:  r['จังหวัด'] || r['Province'] || '',
+    mentor:    r['พี่เลี้ยง'] || r['Mentor'] || '',
+    status_project: r['สถานะโครงการ'] || '',
+    tracker:   ts, quant: qs, qual: qls,
+    pct, status: pct >= 90 ? 'Complete' : pct >= 50 ? 'Partial' : 'Missing',
+    issue:     r['หมายเหตุ'] || r['issue'] || r['หมายเหตุ (ด้านคุณภาพข้อมูล)'] || '',
+    action:    r['action_needed'] || r['Action'] || r['หมายเหตุ (สิ่งที่ต้องดำเนินการต่อ)'] || '',
+    evidence:  r['หลักฐานแนบ/ลิงก์อ้างอิง'] || '',
+    raw:       r['Raw ผลลัพธ์จากภาคสนาม'] || r['raw'] || '',
+    budget:    parseFloat((r['งบที่ได้รับ'] || '0').replace(/,/g,'')) || 0,
+    channel:   r['ช่องทางที่ได้รับข้อมูล'] || '',
+    _raw: r
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SAMPLE DATA (real data from uploaded file)
+═══════════════════════════════════════════════════════════════════ */
+const SAMPLE = [
+  {code:"P-68001",name:"กลไกชุมชนเฝ้าระวังภาวะเปราะบางเด็กและเยาวชน",node:"NT1-AREA",province:"แพร่",mentor:"พี่ตอง",tracker:1,quant:1,qual:1,status_project:"กำลังดำเนินการ",issue:"ขาดหลักฐานการใช้แบบประเมินจริง",action:"ขอภาพกิจกรรม/ตัวอย่างแบบคัดกรองที่ใช้จริง",evidence:"proposal.pdf; mentor_note.docx",raw:"อสม.มีความรู้ในการคัดกรองเด็กเสี่ยง",budget:60000,channel:"Line group"},
+  {code:"P-68002",name:"เยาวชนบ้านห้วยปูลิงสืบสานอาหารท้องถิ่น",node:"NT3-POP",province:"แพร่",mentor:"พี่ต้อม",tracker:1,quant:1,qual:0.5,status_project:"Ongoing",issue:"ผลลัพธ์เขียนกว้าง ไม่ชัดว่าเปลี่ยนพฤติกรรม",action:"ตามจำนวนเยาวชนที่เข้าร่วมจริง",evidence:"รูปกิจกรรม 12 รูป",raw:"เยาวชนรู้จักพืชผักพื้นบ้านมากขึ้น",budget:100000,channel:"Google Drive"},
+  {code:"P-68003",name:"เวียงขยับเมือง ร่วมออกแบบพื้นที่สาธารณะเชียงดาว",node:"NT1-AREA",province:"เชียงใหม่",mentor:"พี่บี",tracker:0,quant:0,qual:0,status_project:"",issue:"ยังไม่มีข้อมูลผลลัพธ์หรือข้อมูลภาคสนาม",action:"ติดตามพี่เลี้ยงก่อนรอบสรุปกลางเดือน",evidence:"มีข้อเสนอโครงการ",raw:"",budget:100000,channel:"Airtable"},
+  {code:"P-68004",name:"คนรุ่นใหม่ร่วมดูแลทรัพยากรและสิทธิชุมชน",node:"NT2-ISSUE",province:"เชียงใหม่",mentor:"พี่เมย์",tracker:1,quant:0.5,qual:1,status_project:"กำลังดำเนินการ",issue:"quant ขาด before-after",action:"ขอ checklist เครื่องมือ",evidence:"แผนที่ชุมชน draft",raw:"คนรุ่นใหม่เข้าใจสิทธิชุมชน",budget:100000,channel:"Line OA"},
+  {code:"P-68005",name:"เกษตรปลอดสารฟื้นระบบพืชหลากหลาย",node:"NT2-ISSUE",province:"ตาก",mentor:"พี่แก้ว",tracker:1,quant:1,qual:0.5,status_project:"กำลังดำเนินการ",issue:"ไม่มีคำอธิบายวิธีเก็บและฐานก่อนโครงการ",action:"ขอคำอธิบายตัวชี้วัด",evidence:"summary.xlsx",raw:"ครัวเรือนลดการใช้สารเคมี",budget:60000,channel:"Email"},
+  {code:"P-68006",name:"สุขภาวะ 5 ด้านของผู้สูงวัยบ้านดอนแก้ว",node:"NT3-POP",province:"พะเยา",mentor:"พี่แนน",tracker:1,quant:1,qual:0.5,status_project:"ดำเนินการเสร็จแล้ว",issue:"ผลลัพธ์เชิงสุขภาพยังเป็น self-report",action:"ขอข้อมูล baseline",evidence:"รูปกิจกรรม; ตารางผู้เข้าร่วม",raw:"ผู้สูงอายุสุขภาพกายใจดีขึ้น",budget:60000,channel:"Google Drive"},
+  {code:"P-68007",name:"เศรษฐกิจฐานรากพืชเศรษฐกิจบ้านพ่อเสือใต้",node:"NT2-ISSUE",province:"แม่ฮ่องสอน",mentor:"พี่นุ่น",tracker:1,quant:1,qual:1,status_project:"เสร็จ",issue:"ไม่ชัดว่าเกิดจากโครงการหรือกิจกรรมเดิม",action:"ขอ timeline ก่อน-หลัง",evidence:"ยอดขายเดือนแรก; ภาพผลิตภัณฑ์",raw:"เกิดกลุ่มแปรรูปเริ่มขายผลิตภัณฑ์",budget:100000,channel:"Email"},
+  {code:"P-68008",name:"ฟื้นฟูระบบนิเวศลุ่มน้ำปิงตอนบน",node:"NT2-ISSUE",province:"พิจิตร",mentor:"พี่ฟ้า",tracker:0,quant:0,qual:0,status_project:"",issue:"ไม่มีข้อมูลการดำเนินงานหลังอนุมัติ",action:"ตรวจสอบว่าโครงการยัง active",evidence:"มีข้อเสนอโครงการเท่านั้น",raw:"",budget:60000,channel:"Airtable"},
+  {code:"P-68009",name:"ชาโกโก้สร้างอาชีพเชื่อมพลังชุมชน",node:"NT2-ISSUE",province:"เชียงใหม่",mentor:"พี่ต้อม",tracker:1,quant:1,qual:1,status_project:"กำลังดำเนินการ",issue:"ยังไม่ชัดเรื่องผลลัพธ์ต่อรายได้",action:"ติดตามยอดขาย/แผนธุรกิจ",evidence:"ภาพกิจกรรม; รายชื่อผู้เข้าร่วม",raw:"กลุ่มเป้าหมายมีทักษะปลูกและแปรรูปโกโก้",budget:100000,channel:"Google Drive"},
+  {code:"P-68010",name:"เกษตรกรคนรุ่นใหม่ปลูกผักปลอดภัยชุมชน",node:"NT1-AREA",province:"ลำพูน",mentor:"พี่แหม่ม",tracker:1,quant:0.5,qual:1,status_project:"กำลังดำเนินการ",issue:"ตัวเลขผู้เข้าร่วมไม่ตรงกัน",action:"ขอให้พื้นที่ยืนยันตัวเลข",evidence:"รายงานกิจกรรมรอบ 1",raw:"เกิดความร่วมมือระหว่างกลุ่มเดิมและกลุ่มใหม่",budget:100000,channel:"Line group"},
+  {code:"P-68011",name:"แมลงโปรตีนชุมชนแปรเศษอาหารสู่ฟาร์มไข่",node:"NT3-POP",province:"พะเยา",mentor:"พี่บาส",tracker:1,quant:0,qual:1,status_project:"กำลังดำเนินการ",issue:"มี narrative ดี แต่ไม่มีตัวเลข",action:"ขอตัวเลข proxy ขั้นต่ำ",evidence:"field_note.docx",raw:"มีโมเดลจัดการขยะอินทรีย์ในชุมชน",budget:100000,channel:"Email"},
+  {code:"P-68012",name:"พื้นที่เรียนรู้ปลอดภัยในโรงเรียนจังหวัดแพร่ ปีที่ 2",node:"NT3-POP",province:"แพร่",mentor:"พี่ใหม่",tracker:0.5,quant:0,qual:0,status_project:"กำลังดำเนินการ",issue:"claim สูง แต่ไม่มีหลักฐาน",action:"ติดตามหลักฐานเชิงกายภาพ",evidence:"ไม่มีไฟล์แนบ",raw:"โรงเรียนมีพื้นที่ปลอดภัยมากขึ้น",budget:100000,channel:"Line OA"},
+  {code:"P-68013",name:"ชุมชนเมืองนอกระบบเข้าถึงสิทธิสุขภาพกรุงเทพฯ",node:"NT1-AREA",province:"กรุงเทพมหานคร",mentor:"พี่แพรว",tracker:1,quant:1,qual:1,status_project:"กำลังดำเนินการ",issue:"ต้องตรวจความครบของรายชื่อชุมชน",action:"ขอ list ชุมชนและสถานะขึ้นทะเบียน",evidence:"รายงานเวที; แผนชุมชน",raw:"ชุมชนตกหล่นเริ่มเข้าถึงช่องทางสนับสนุน",budget:150000,channel:"Google Drive"},
+  {code:"P-68014",name:"Node เมืองกรุง บูรณาการแผนและระบบรายงานร่วม",node:"NT1-AREA",province:"กรุงเทพมหานคร",mentor:"พี่ฟิล์ม",tracker:1,quant:0.5,qual:0.5,status_project:"ดำเนินการอยู่",issue:"outcome อยู่ระดับกลไก ไม่เห็นปลายทาง",action:"ติดตามเอกสารแผนร่วม",evidence:"meeting_note.pdf",raw:"เกิดการเชื่อมงบ 3 แหล่งทุน",budget:220000,channel:"Email"},
+  {code:"P-68015",name:"ความร่วมมือท้องถิ่นลดอุปสรรคการเข้าถึงสุขภาพ",node:"WP02-PARTNERSHIP",province:"อุดรธานี",mentor:"พี่ออย",tracker:1,quant:0.5,qual:1,status_project:"กำลังดำเนินการ",issue:"ตัวเลขผลลัพธ์ด้านบริการยังไม่ครบ",action:"ตามข้อมูล รพ.สต.",evidence:"งบสมทบ อบจ.; interview note",raw:"อบจ.และ รพ.สต.ร่วมสนับสนุนกลไก",budget:500000,channel:"Email"},
+  {code:"P-68016",name:"แกนนำสุขภาวะชุมชนลดเสี่ยงโรคไม่ติดต่อ",node:"NT2-ISSUE",province:"นครราชสีมา",mentor:"พี่หมิว",tracker:1,quant:1,qual:1,status_project:"เสร็จสิ้น",issue:"ต้องตรวจว่าเป็นคนเดิมก่อน-หลัง",action:"cross-check respondent id",evidence:"body_measurement.xlsx; note",raw:"แกนนำ 18 คนลดรอบเอวและออกกำลังกายต่อเนื่อง",budget:180000,channel:"Google Drive"},
+  {code:"P-68017",name:"กลุ่มชาติพันธุ์เข้าถึงระบบสุขภาพเชิงรุก",node:"NT3-POP",province:"สตูล",mentor:"พี่ดา",tracker:1,quant:0,qual:1,status_project:"กำลังดำเนินการ",issue:"ยังไม่มีตัวเลขการเข้าถึงบริการ",action:"ขอจำนวนผู้เข้ารับบริการ",evidence:"field_note.pdf",raw:"กลุ่มมานิเริ่มเข้าถึงบริการตรวจสุขภาพ",budget:160000,channel:"Line group"},
+  {code:"P-68018",name:"Platform พัฒนาระบบข้อมูลสุขภาวะพื้นที่",node:"NT1-AREA",province:"หลายจังหวัด",mentor:"พี่โจ",tracker:1,quant:0.5,qual:1,status_project:"กำลังดำเนินการ",issue:"dashboard ยังมี missing หลายช่อง",action:"ตรวจ dashboard และขอ export data",evidence:"dashboard link",raw:"หน่วยจัดการเริ่มใช้ dashboard ติดตาม",budget:300000,channel:"Airtable"},
+  {code:"P-68019",name:"เครือข่ายเมืองเปราะบางพัฒนาระบบพึ่งพากัน",node:"NT3-POP",province:"กรุงเทพมหานคร",mentor:"พี่หลิน",tracker:0.5,quant:0,qual:0,status_project:"กำลังดำเนินการ",issue:"ไม่มีข้อมูลภาคสนาม",action:"ติดตาม urgent เพราะใกล้รอบรายงาน",evidence:"",raw:"",budget:120000,channel:"Line OA"},
+  {code:"P-68020",name:"เครือข่ายผู้นำชุมชนขับเคลื่อนสุขภาวะท้องถิ่น",node:"WP01-GRANT",province:"อุตรดิตถ์",mentor:"พี่เก๋",tracker:1,quant:0,qual:1,status_project:"ปิดโครงการแล้ว",issue:"ไม่มี quant แต่เป็น retrospective case",action:"พิจารณาใช้เป็น case illustration",evidence:"interview_note; meeting minute",raw:"ชุมชนยังทำกิจกรรมต่อหลังทุนจบ",budget:250000,channel:"Email"},
+  {code:"P-68021",name:"จังหวัดต้นแบบขับเคลื่อนยุทธศาสตร์สุขภาวะ",node:"NT1-AREA",province:"ศรีสะเกษ",mentor:"พี่ตาล",tracker:1,quant:0.5,qual:1,status_project:"กำลังดำเนินการ",issue:"มี evidence ระดับกลไก ยังไม่เห็นการใช้งานจริง",action:"ขอหลักฐาน action หลังประชุม",evidence:"รายงานประชุม",raw:"เกิดคณะทำงานยุทธศาสตร์จังหวัด",budget:350000,channel:"Google Drive"},
+  {code:"P-68022",name:"บ้านมั่นคงชุมชนเมืองลดปัจจัยเสี่ยงสุขภาพ",node:"NT3-POP",province:"ชลบุรี",mentor:"พี่อ้อม",tracker:1,quant:1,qual:1,status_project:"ดำเนินการอยู่",issue:"กติกามีหลักฐาน แต่ยังไม่ชัดว่าถูกใช้จริง",action:"ขอกรณีการบังคับใช้กติกา",evidence:"กติกาชุมชน; รูปป้าย",raw:"ชุมชนทำกติกาพื้นที่ปลอดเหล้า",budget:90000,channel:"Line group"},
+  {code:"P-68023",name:"คนรุ่นใหม่กลับบ้านพัฒนาระบบอาหารปลอดภัย",node:"NT3-POP",province:"กาฬสินธุ์",mentor:"พี่เตย",tracker:1,quant:1,qual:1,status_project:"กำลังดำเนินการ",issue:"project_type ไม่ใช่ Node โดยตรง",action:"ตรวจ mapping กับโครงสร้างแผน",evidence:"form response; note",raw:"คนรุ่นใหม่ออกแบบแปลงเรียนรู้อาหารปลอดภัย",budget:100000,channel:"Google Drive"},
+  {code:"P-68024",name:"ประมงพื้นบ้านฟื้นระบบอาหารชายฝั่ง",node:"NT2-ISSUE",province:"สงขลา",mentor:"พี่หนึ่ง",tracker:1,quant:0.5,qual:1,status_project:"กำลังดำเนินการ",issue:"ข้อมูลตัวเลขยังเป็น sample เล็ก",action:"ตามข้อมูล catch log รายเดือน",evidence:"field note; catch log sample",raw:"ชาวบ้านจับสัตว์น้ำได้มากขึ้น",budget:200000,channel:"Email"},
+];
+
+SAMPLE.forEach(p => {
+  p.pct = Math.round((p.tracker + p.quant + p.qual) / 3 * 100);
+  p.status = p.pct >= 90 ? 'Complete' : p.pct >= 50 ? 'Partial' : 'Missing';
+});
+
+const SAMPLE_QUANT = [
+  {response_id:"R001",project_code:"P-68016",role:"แกนนำโครงการ",round:"baseline",date:"2026-03-01",age:45,gender:"หญิง",activities:2,know_pre:2,know_post:4,behaviour:4,followup:"ใช่",note:"เริ่มออกกำลังกายสัปดาห์ละ 3 วัน",qa_flag:""},
+  {response_id:"R002",project_code:"P-68016",role:"แกนนำโครงการ",round:"endline",date:"2026-04-20",age:45,gender:"หญิง",activities:5,know_pre:2,know_post:5,behaviour:5,followup:"ใช่",note:"ลดหวานและชวนเพื่อนเดินเย็น",qa_flag:"possible_duplicate"},
+  {response_id:"R003",project_code:"P-68016",role:"แกนนำโครงการ",round:"endline",date:"2026-04-20",age:52,gender:"ชาย",activities:4,know_pre:3,know_post:6,behaviour:5,followup:"ใช่",note:"คะแนนหลังเกิน scale",qa_flag:"out_of_range"},
+  {response_id:"R011",project_code:"P-68002",role:"แกนนำโครงการ",round:"midline",date:"2026-04-10",age:17,gender:"หญิง",activities:3,know_pre:2,know_post:4,behaviour:4,followup:"ใช่",note:"รู้จักผักพื้นบ้านและทำกิจกรรมกับผู้สูงอายุ",qa_flag:""},
+  {response_id:"R012",project_code:"P-68002",role:"กลุ่มเป้าหมาย",round:"midline",date:"2026-04-10",age:16,gender:"หญิง",activities:1,know_pre:"",know_post:4,behaviour:3,followup:"ไม่ระบุ",note:"ไม่ได้ตอบก่อนเข้าร่วม",qa_flag:"missing_baseline_score"},
+  {response_id:"R013",project_code:"P-68005",role:"กลุ่มเป้าหมาย",round:"midline",date:"2026-04-14",age:43,gender:"หญิง",activities:2,know_pre:2,know_post:4,behaviour:3,followup:"ใช่",note:"ลดใช้สารเคมีบางแปลง",qa_flag:""},
+  {response_id:"R017",project_code:"P-68024",role:"ภาคีพื้นที่",round:"midline",date:"2026-04-15",age:51,gender:"ชาย",activities:3,know_pre:3,know_post:4,behaviour:4,followup:"ใช่",note:"เริ่มจดบันทึกปริมาณสัตว์น้ำ",qa_flag:""},
+  {response_id:"R024",project_code:"P-68007",role:"แกนนำโครงการ",round:"midline",date:"2026-04-11",age:31,gender:"หญิง",activities:4,know_pre:3,know_post:5,behaviour:5,followup:"ใช่",note:"เริ่มขายกาแฟแปรรูปล็อตแรก",qa_flag:""},
+];
+
+const SAMPLE_QUAL = [
+  {note_id:"Q001",project_code:"P-68013",source_type:"สัมภาษณ์สั้น",role:"แกนนำชุมชน",date:"2026-04-21",summary:"ชุมชนรู้สึกว่าตัวเองมีช่องทางในการเข้าถึงโอกาสมากขึ้น หลังเวทีมีการชวนกันทำแผนสุขภาพชุมชน",claim:"เข้าถึงโอกาส/แผนชุมชน",support:"ระบุชื่อชุมชน 3 แห่ง แต่ยังไม่มีไฟล์แผนแนบ",has_quote:"มีบางส่วน",attachment:"meeting_note_UBKK.pdf",evidence_quality:"MEDIUM"},
+  {note_id:"Q002",project_code:"P-68016",source_type:"บันทึกพี่เลี้ยง",role:"แกนนำสุขภาพ",date:"2026-04-20",summary:"แกนนำมีการเปลี่ยนพฤติกรรมชัดเจน หลายคนลดรอบเอวได้และเริ่มออกกำลังกายต่อเนื่อง",claim:"เปลี่ยนพฤติกรรมสุขภาพ",support:"มีไฟล์ body_measurement แต่ยังไม่แน่ใจว่าเป็นคนเดิมก่อน-หลัง",has_quote:"ไม่มี",attachment:"body_measurement.xlsx",evidence_quality:"HIGH"},
+  {note_id:"Q004",project_code:"P-68005",source_type:"โทรติดตาม",role:"พี่เลี้ยง",date:"2026-04-14",summary:"พื้นที่บอกว่าลดสารเคมีได้เยอะมาก ชาวบ้านเปลี่ยนไปดีขึ้น",claim:"ลดสารเคมี",support:"ไม่มีตัวเลข ไม่มีชื่อกลุ่มเป้าหมาย ไม่มี timeframe",has_quote:"ไม่มี",attachment:"-",evidence_quality:"LOW"},
+  {note_id:"Q005",project_code:"P-68024",source_type:"สัมภาษณ์",role:"ชาวประมง",date:"2026-04-15",summary:"ปีนี้จับปลาได้ดีขึ้นกว่าปีก่อน มีบางครัวเรือนเริ่มจดในสมุดกลางของกลุ่ม",claim:"เศรษฐกิจครัวเรือน/อาหาร",support:"มีตัวอย่าง catch log 1 เดือนจาก 5 ครัวเรือน",has_quote:"มี",attachment:"catch_log_sample.pdf",evidence_quality:"MEDIUM"},
+  {note_id:"Q007",project_code:"P-68020",source_type:"สัมภาษณ์ย้อนหลัง",role:"รพ.สต./สภาผู้นำ",date:"2026-04-17",summary:"แม้ทุนจบไปแล้ว กลุ่มยังประชุมเดือนละครั้งและใช้ รพ.สต.เป็นจุดประสาน",claim:"ความยั่งยืน/กลไกหลังจบทุน",support:"มีรายงานประชุม 3 เดือนล่าสุด",has_quote:"มีบางส่วน",attachment:"meeting_tron_3months.pdf",evidence_quality:"HIGH"},
+  {note_id:"Q011",project_code:"P-68007",source_type:"สัมภาษณ์",role:"แกนนำกาแฟ",date:"2026-04-11",summary:"กลุ่มเริ่มขายกาแฟแปรรูป แต่ยังไม่ทำบัญชีรายรับรายจ่ายเป็นระบบ",claim:"เศรษฐกิจฐานราก",support:"มีตัวเลขยอดขายโดยประมาณจากคำบอกเล่า",has_quote:"มี",attachment:"interview_coffee.docx",evidence_quality:"MEDIUM"},
+];
+
+function loadSampleData() {
+  ALL_PROJECTS = SAMPLE.map(p => ({...p}));
+  ALL_QUANT    = SAMPLE_QUANT;
+  ALL_QUAL     = SAMPLE_QUAL;
+  setSyncStatus('ok', 'Sample data loaded');
+  document.getElementById('sheetUrlDisplay').textContent = 'sample data (not connected to Google Sheets)';
+  updateKPIs();
+  renderTable();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════════════════ */
+function updateKPIs() {
+  const n = ALL_PROJECTS.length;
+  document.getElementById('kpi-total').textContent   = n;
+  document.getElementById('kpi-complete').textContent= ALL_PROJECTS.filter(p=>p.status==='Complete').length;
+  document.getElementById('kpi-partial').textContent = ALL_PROJECTS.filter(p=>p.status==='Partial').length;
+  document.getElementById('kpi-missing').textContent = ALL_PROJECTS.filter(p=>p.status==='Missing').length;
+}
+
+function renderTable() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  const fn = document.getElementById('filterNode').value;
+  const fs = document.getElementById('filterStatus').value;
+  const sort = document.getElementById('sortBy').value;
+
+  let rows = ALL_PROJECTS.filter(p => {
+    const match = !q || [p.code, p.name, p.province, p.mentor, p.node].some(v => (v||'').toLowerCase().includes(q));
+    const nodeOk = !fn || p.node === fn;
+    const statOk = !fs || p.status === fs;
+    return match && nodeOk && statOk;
+  });
+
+  if (sort === 'completeness_asc')  rows.sort((a,b) => a.pct - b.pct);
+  if (sort === 'completeness_desc') rows.sort((a,b) => b.pct - a.pct);
+  if (sort === 'code')              rows.sort((a,b) => a.code.localeCompare(b.code));
+  if (sort === 'budget_desc')       rows.sort((a,b) => (b.budget||0) - (a.budget||0));
+
+  document.getElementById('rowCount').textContent = `${rows.length} / ${ALL_PROJECTS.length} projects`;
+
+  const tbody = document.getElementById('tableBody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr class="loading-row"><td colspan="8">No projects match your filters.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(p => {
+    const ts = p.tracker, qs = p.quant, qls = p.qual;
+    const pillClass = p.status === 'Complete' ? 'pill-complete' : p.status === 'Partial' ? 'pill-partial' : 'pill-missing';
+    return `<tr onclick="openModal('${p.code}')">
+      <td class="td-code">${p.code}</td>
+      <td class="td-name"><div style="font-weight:500;line-height:1.4">${p.name}</div></td>
+      <td class="td-node"><span style="background:var(--surface2);padding:2px 7px;border-radius:4px;font-size:11px">${p.node}</span></td>
+      <td>${p.province}</td>
+      <td class="td-mentor">${p.mentor}</td>
+      <td style="min-width:140px">
+        <div class="score-bars">
+          <div class="score-seg ${ts===1?'filled-t':ts>.5?'filled-t half':''}"></div>
+          <div class="score-seg ${qs===1?'filled-q':qs>.5?'filled-q half':''}"></div>
+          <div class="score-seg ${qls===1?'filled-ql':qls>.5?'filled-ql half':''}"></div>
+          <div class="score-pct">${p.pct}%</div>
+        </div>
+      </td>
+      <td><span class="pill ${pillClass}"><span class="pill-dot"></span>${p.status}</span></td>
+      <td style="max-width:260px;font-size:11px;color:var(--muted);line-height:1.4">${(p.action||'').substring(0,80)}${(p.action||'').length>80?'…':''}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════════════════ */
+function openModal(code) {
+  const p = ALL_PROJECTS.find(x => x.code === code);
+  if (!p) return;
+  CURRENT_PROJECT = p;
+
+  document.getElementById('m-code').textContent = p.code;
+  document.getElementById('m-name').textContent = p.name;
+  document.getElementById('m-node').textContent = p.node;
+  document.getElementById('m-province').textContent = p.province;
+
+  const pillClass = p.status === 'Complete' ? 'pill-complete' : p.status === 'Partial' ? 'pill-partial' : 'pill-missing';
+  document.getElementById('m-status-pill').className = `pill ${pillClass}`;
+  document.getElementById('m-status-pill').innerHTML = `<span class="pill-dot"></span>${p.status} — ${p.pct}%`;
+
+  // completeness bars
+  setTimeout(() => {
+    ['t','q','ql'].forEach((k,i) => {
+      const val = [p.tracker, p.quant, p.qual][i] * 100;
+      document.getElementById(`m-bar-${k}`).style.width = val + '%';
+      document.getElementById(`m-pct-${k}`).textContent = Math.round(val) + '%';
+    });
+  }, 80);
+
+  // detail grid
+  const details = [
+    ['สถานะโครงการ', p.status_project || '—'],
+    ['งบประมาณ', p.budget ? `฿${p.budget.toLocaleString()}` : '—'],
+    ['พี่เลี้ยง', p.mentor || '—'],
+    ['ช่องทางข้อมูล', p.channel || '—'],
+    ['หลักฐานแนบ', p.evidence || '—'],
+    ['Raw ผลลัพธ์', p.raw || '—', true],
+    ['หมายเหตุคุณภาพ', p.issue || '—', true],
+    ['Action ต่อ', p.action || '—', true],
+  ];
+  document.getElementById('m-detail-grid').innerHTML = details.map(([l,v,wide]) =>
+    `<div class="detail-item${wide?' wide':''}"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`
+  ).join('');
+
+  // Google Sheets link
+  if (CONFIG.sheetUrl) {
+    document.getElementById('m-sheet-link').style.display = 'flex';
+    document.getElementById('m-sheet-href').href = CONFIG.sheetUrl;
+    document.getElementById('m-sheet-href').textContent = `Open Google Sheets (${p.code}) →`;
+  }
+
+  // Quant tab
+  const quantForProject = ALL_QUANT.filter(q => (q.project_code||q.รหัสโครงการ||'').replace('P68','P-68') === code);
+  if (quantForProject.length) {
+    document.getElementById('m-quant-content').innerHTML = `
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-family:var(--mono)">${quantForProject.length} response(s) found</div>
+      <div style="overflow-x:auto"><table class="sub-table">
+        <thead><tr><th>ID</th><th>Round</th><th>Date</th><th>Role</th><th>Age</th><th>Know Pre</th><th>Know Post</th><th>Δ</th><th>Behaviour</th><th>QA Flag</th><th>Note</th></tr></thead>
+        <tbody>${quantForProject.map(q => {
+          const pre = parseFloat(q.know_pre || q['ระดับความรู้ก่อนเข้าร่วม (1–5)'] || '');
+          const post = parseFloat(q.know_post || q['ระดับความรู้หลังเข้าร่วม (1–5)'] || '');
+          const delta = (!isNaN(pre) && !isNaN(post)) ? `<span style="color:${post>pre?'var(--green)':'var(--danger)'}">
+            ${post>pre?'+':''}${(post-pre).toFixed(1)}</span>` : '—';
+          const flag = q.qa_flag || q['หมายเหตุการบันทึกข้อมูล'] || '';
+          return `<tr>
+            <td style="font-family:var(--mono);font-size:11px">${q.response_id||q.response_id||'—'}</td>
+            <td><span style="font-family:var(--mono);font-size:10px;background:var(--surface2);padding:1px 6px;border-radius:3px">${q.round||q['รอบการเก็บข้อมูล']||'—'}</span></td>
+            <td style="color:var(--muted);font-size:11px">${q.date||q['วันที่ส่งข้อมูล']||'—'}</td>
+            <td style="font-size:11px">${q.role||q['บทบาทผู้ตอบ']||'—'}</td>
+            <td style="text-align:center">${q.age||q['อายุ']||'—'}</td>
+            <td style="text-align:center">${isNaN(pre)?'—':pre}</td>
+            <td style="text-align:center">${isNaN(post)?'—':post}</td>
+            <td style="text-align:center">${delta}</td>
+            <td style="text-align:center">${q.behaviour||q['การประเมินการเปลี่ยนแปลงพฤติกรรมตนเอง (1–5)']||'—'}</td>
+            <td>${flag ? `<span class="qa-badge">${flag}</span>` : '<span style="color:var(--green);font-size:11px">✓</span>'}</td>
+            <td style="font-size:11px;color:var(--muted);max-width:160px">${q.note||q['ความคิดเห็นเพิ่มเติม']||''}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+  } else {
+    document.getElementById('m-quant-content').innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:13px">No quantitative responses found for ${code}</div>`;
+  }
+
+  // Qual tab
+  const qualForProject = ALL_QUAL.filter(q => (q.project_code||q.รหัสโครงการ||'') === code);
+  if (qualForProject.length) {
+    document.getElementById('m-qual-content').innerHTML = qualForProject.map(q => {
+      const ev = q.evidence_quality || '';
+      const evClass = ev==='HIGH'?'ev-high':ev==='MEDIUM'?'ev-medium':'ev-low';
+      return `<div style="background:var(--bg);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:10px">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--accent)">${q.note_id||'—'}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+            <span style="font-family:var(--mono);font-size:10px;background:var(--surface2);padding:2px 7px;border-radius:3px">${q.source_type||q['ประเภทแหล่งข้อมูล']||'—'}</span>
+            <span class="${evClass}" style="font-size:11px;font-weight:600">${ev||'—'}</span>
+          </div>
+        </div>
+        <div style="font-size:13px;line-height:1.6;margin-bottom:8px">${q.summary||q['raw สรุป note']||''}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><div class="detail-label">Claim/Signal</div><div style="font-size:12px;color:var(--accent2)">${q.claim||q['claim/signal']||'—'}</div></div>
+          <div><div class="detail-label">Supporting Detail</div><div style="font-size:12px">${q.support||q['รายละเอียดสนับสนุน']||'—'}</div></div>
+          <div><div class="detail-label">Quote Present</div><div style="font-size:12px">${q.has_quote||q['มีคำพูดอ้างอิงหรือไม่']||'—'}</div></div>
+          <div><div class="detail-label">Attachment</div><div style="font-size:12px;color:var(--muted);font-family:var(--mono)">${q.attachment||q['เอกสารแนบ/แหล่งอ้างอิง']||'—'}</div></div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('m-qual-content').innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:13px">No qualitative notes found for ${code}</div>`;
+  }
+
+  // Tracker tab
+  document.getElementById('m-tracker-content').innerHTML = `
+    <div class="detail-grid">
+      ${[
+        ['project_code', p.code], ['node_type', p.node], ['จังหวัด', p.province],
+        ['พี่เลี้ยง', p.mentor], ['สถานะโครงการ', p.status_project||'—'],
+        ['งบประมาณ', p.budget ? `฿${p.budget.toLocaleString()}` : '—'],
+        ['tracker_score', `${p.tracker} / 1.0`], ['quant_score', `${p.quant} / 1.0`],
+        ['qual_score', `${p.qual} / 1.0`], ['overall_%', `${p.pct}%`],
+        ['ช่องทาง', p.channel||'—'], ['หลักฐาน', p.evidence||'—'],
+        ['Raw ผลลัพธ์', p.raw||'—', true],
+        ['หมายเหตุคุณภาพ', p.issue||'—', true],
+        ['Action ต่อ', p.action||'—', true],
+      ].map(([l,v,wide]) => `<div class="detail-item${wide?' wide':''}"><div class="detail-label">${l}</div><div class="detail-value" style="font-family:${['project_code','node_type','tracker_score','quant_score','qual_score','overall_%'].includes(l)?'var(--mono)':'var(--sans)'}">${v}</div></div>`).join('')}
+    </div>`;
+
+  // reset to first tab
+  document.querySelectorAll('.modal-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  document.querySelectorAll('.tab-pane').forEach((p,i) => p.classList.toggle('active', i===0));
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+function switchTab(el, paneId) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('modal').classList.remove('open'); });
+
+/* ═══════════════════════════════════════════════════════════════════
+   SYNC STATUS
+═══════════════════════════════════════════════════════════════════ */
+function setSyncStatus(state, msg) {
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  label.textContent = msg;
+}
+
+function openGoogleSheet() {
+  if (CONFIG.sheetUrl) { window.open(CONFIG.sheetUrl, '_blank'); }
+  else { alert('Connect a Google Sheet first using the configuration panel above.'); }
+}
+
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(fetchData, 60000);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   AUTO-CONNECT ON LOAD
+═══════════════════════════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  if (CONFIG.sheetId) {
+    CONFIG.sheetUrl = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/edit`;
+    document.getElementById('sheetUrlDisplay').textContent = CONFIG.sheetId;
+    fetchData();
+    startAutoRefresh();
+  } else {
+    loadSampleData(); // Show sample data by default
+  }
+});
+</script>
+</body>
+</html>
